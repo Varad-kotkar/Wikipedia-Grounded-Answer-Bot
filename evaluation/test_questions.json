@@ -1,0 +1,318 @@
+{
+  "metadata": {
+    "total": 20,
+    "difficulty_distribution": {
+      "easy": 5,
+      "medium": 7,
+      "hard": 5,
+      "synthesis": 3
+    },
+    "scoring": {
+      "2": "Correct — answer is accurate and complete",
+      "1": "Partially correct — answer is on the right track but missing key details",
+      "0": "Incorrect — answer is wrong or the system says 'I don't know' for something answerable"
+    }
+  },
+  "questions": [
+    {
+      "id": "easy_001",
+      "question": "What is machine learning?",
+      "difficulty": "easy",
+      "category": "definition",
+      "wikipedia_article": "Machine learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Machine_learning",
+      "key_factual_claims": [
+        "Machine learning is a subset of artificial intelligence.",
+        "It gives computers the ability to learn from data without explicit programming.",
+        "ML algorithms build mathematical models based on sample data to make predictions or decisions."
+      ],
+      "expected_keywords": ["algorithm", "data", "learn", "experience", "training", "subset", "artificial intelligence"],
+      "expected_answer": "Machine learning is a subset of artificial intelligence that gives computers the ability to learn from data and improve their performance on tasks through experience, without being explicitly programmed."
+    },
+    {
+      "id": "easy_002",
+      "question": "What is a neural network?",
+      "difficulty": "easy",
+      "category": "definition",
+      "wikipedia_article": "Neural network",
+      "reference_source": "https://en.wikipedia.org/wiki/Neural_network",
+      "key_factual_claims": [
+        "A neural network is a computational model inspired by the biological neural networks in animal brains.",
+        "It consists of interconnected units or nodes called artificial neurons.",
+        "Connections between nodes have weights that adjust during the learning process."
+      ],
+      "expected_keywords": ["neurons", "brain", "layers", "nodes", "connections", "biological", "artificial"],
+      "expected_answer": "A neural network is a computational model inspired by the structure of biological brains, composed of interconnected nodes (artificial neurons) organised in layers that process information."
+    },
+    {
+      "id": "easy_003",
+      "question": "What is deep learning?",
+      "difficulty": "easy",
+      "category": "definition",
+      "wikipedia_article": "Deep learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Deep_learning",
+      "key_factual_claims": [
+        "Deep learning is a subset of machine learning based on artificial neural networks.",
+        "The 'deep' in deep learning refers to having multiple hidden layers in the network.",
+        "It automatically extracts hierarchical feature representations from raw input data."
+      ],
+      "expected_keywords": ["neural network", "layers", "representation", "deep", "machine learning", "features"],
+      "expected_answer": "Deep learning is a subset of machine learning that uses multi-layered neural networks to automatically learn hierarchical representations from raw data."
+    },
+    {
+      "id": "easy_004",
+      "question": "What is data science?",
+      "difficulty": "easy",
+      "category": "definition",
+      "wikipedia_article": "Data science",
+      "reference_source": "https://en.wikipedia.org/wiki/Data_science",
+      "key_factual_claims": [
+        "Data science is an interdisciplinary academic field combining statistics, computing, and domain expertise.",
+        "It extracts knowledge and actionable insights from structured and unstructured data.",
+        "Techniques include data analysis, machine learning algorithms, and scientific methods."
+      ],
+      "expected_keywords": ["data", "insights", "statistics", "analysis", "scientific", "methods"],
+      "expected_answer": "Data science is an interdisciplinary field that uses scientific methods, algorithms, and systems to extract knowledge and insights from structured and unstructured data."
+    },
+    {
+      "id": "easy_005",
+      "question": "What is reinforcement learning?",
+      "difficulty": "easy",
+      "category": "definition",
+      "wikipedia_article": "Reinforcement learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Reinforcement_learning",
+      "key_factual_claims": [
+        "Reinforcement learning is an area of machine learning concerned with how agents take actions in an environment.",
+        "The objective of the agent is to maximize cumulative numerical reward.",
+        "It relies on trial-and-error search and delayed reward signals."
+      ],
+      "expected_keywords": ["agent", "environment", "reward", "action", "policy", "trial and error"],
+      "expected_answer": "Reinforcement learning is a type of machine learning where an agent learns to make decisions by interacting with an environment, receiving rewards or penalties based on its actions."
+    },
+    {
+      "id": "medium_001",
+      "question": "What is the difference between supervised and unsupervised learning?",
+      "difficulty": "medium",
+      "category": "comparison",
+      "wikipedia_article": "Supervised learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Supervised_learning",
+      "key_factual_claims": [
+        "Supervised learning trains models on labeled input-output pairs.",
+        "Unsupervised learning discovers hidden patterns in unlabeled data without predefined outputs.",
+        "Supervised tasks include classification and regression; unsupervised tasks include clustering."
+      ],
+      "expected_keywords": ["labeled", "unlabeled", "labels", "categories", "patterns", "clustering", "classification"],
+      "expected_answer": "Supervised learning trains on labeled data to predict outputs; unsupervised learning finds hidden patterns or structure in unlabeled data without predefined categories."
+    },
+    {
+      "id": "medium_002",
+      "question": "What is the relationship between artificial intelligence and machine learning?",
+      "difficulty": "medium",
+      "category": "relationship",
+      "wikipedia_article": "Artificial intelligence",
+      "reference_source": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+      "key_factual_claims": [
+        "Machine learning is a subfield of artificial intelligence.",
+        "AI is the overarching discipline of creating systems that perform intelligent tasks.",
+        "ML provides data-driven algorithms allowing AI systems to improve from experience."
+      ],
+      "expected_keywords": ["subset", "field", "broader", "encompasses", "AI", "techniques"],
+      "expected_answer": "Machine learning is a subset of artificial intelligence. AI is the broader field of creating intelligent machines, while ML is a specific approach to achieving AI through data-driven learning."
+    },
+    {
+      "id": "medium_003",
+      "question": "What are common applications of machine learning?",
+      "difficulty": "medium",
+      "category": "application",
+      "wikipedia_article": "Machine learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Machine_learning",
+      "key_factual_claims": [
+        "Machine learning is applied in speech recognition and computer vision.",
+        "It powers web search engines and recommender systems.",
+        "It is used for email spam filtering, medical diagnosis, and fraud detection."
+      ],
+      "expected_keywords": ["spam", "image", "speech", "recommendation", "classification", "fraud", "detection"],
+      "expected_answer": "Common applications include spam filtering, image recognition, speech recognition, recommendation systems, medical diagnosis, fraud detection, and natural language processing."
+    },
+    {
+      "id": "medium_004",
+      "question": "What is big data?",
+      "difficulty": "medium",
+      "category": "definition",
+      "wikipedia_article": "Big data",
+      "reference_source": "https://en.wikipedia.org/wiki/Big_data",
+      "key_factual_claims": [
+        "Big data refers to data sets too large or complex to be dealt with by traditional software.",
+        "It is often characterized by the three Vs: volume, velocity, and variety.",
+        "Analysis often requires distributed computing frameworks."
+      ],
+      "expected_keywords": ["volume", "velocity", "variety", "large", "datasets", "traditional", "processing"],
+      "expected_answer": "Big data refers to extremely large datasets characterised by volume, velocity, and variety that cannot be processed by traditional data-processing tools."
+    },
+    {
+      "id": "medium_005",
+      "question": "What is overfitting in machine learning?",
+      "difficulty": "medium",
+      "category": "concept",
+      "wikipedia_article": "Supervised learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Supervised_learning",
+      "key_factual_claims": [
+        "Overfitting happens when a model memorizes noise and specifics of training data.",
+        "An overfitted model fails to generalize to new, unseen test data.",
+        "It can be reduced with regularization, validation splits, and simpler models."
+      ],
+      "expected_keywords": ["training", "generalise", "noise", "new", "test", "model", "memorise"],
+      "expected_answer": "Overfitting occurs when a model learns the training data too well—including its noise—and fails to generalise to new, unseen data."
+    },
+    {
+      "id": "medium_006",
+      "question": "What is the role of statistics in data science?",
+      "difficulty": "medium",
+      "category": "relationship",
+      "wikipedia_article": "Statistics",
+      "reference_source": "https://en.wikipedia.org/wiki/Statistics",
+      "key_factual_claims": [
+        "Statistics provides mathematical theory for data collection and analysis.",
+        "It enables hypothesis testing, inference, and quantification of uncertainty.",
+        "Statistical methods underwrite the evaluation and validation of predictive models."
+      ],
+      "expected_keywords": ["probability", "inference", "analysis", "hypothesis", "distribution", "foundation"],
+      "expected_answer": "Statistics provides the mathematical foundation for data science, enabling inference, hypothesis testing, probability modelling, and interpretation of data patterns."
+    },
+    {
+      "id": "medium_007",
+      "question": "What is a training dataset in machine learning?",
+      "difficulty": "medium",
+      "category": "concept",
+      "wikipedia_article": "Machine learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Machine_learning",
+      "key_factual_claims": [
+        "A training dataset is the initial data used to fit machine learning model parameters.",
+        "In supervised learning, it consists of paired input features and target outputs.",
+        "The model learns to map inputs to outputs using the patterns in this data."
+      ],
+      "expected_keywords": ["examples", "labeled", "train", "model", "learn", "input", "output"],
+      "expected_answer": "A training dataset is a collection of labeled examples used to teach a machine learning model the mapping from inputs to outputs."
+    },
+    {
+      "id": "hard_001",
+      "question": "How does reinforcement learning differ from supervised learning?",
+      "difficulty": "hard",
+      "category": "comparison",
+      "wikipedia_article": "Reinforcement learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Reinforcement_learning",
+      "key_factual_claims": [
+        "Supervised learning provides explicit target labels for every training sample.",
+        "Reinforcement learning uses delayed, scalar numerical rewards instead of explicit labels.",
+        "RL agents interact with dynamic environments through trial and error."
+      ],
+      "expected_keywords": ["reward", "feedback", "labeled", "agent", "environment", "trial", "delayed"],
+      "expected_answer": "Supervised learning requires labeled input-output pairs; reinforcement learning uses delayed reward signals from environment interactions — no explicit labels are needed."
+    },
+    {
+      "id": "hard_002",
+      "question": "What are the main limitations of deep learning?",
+      "difficulty": "hard",
+      "category": "critical",
+      "wikipedia_article": "Deep learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Deep_learning",
+      "key_factual_claims": [
+        "Deep learning requires large amounts of labeled training data.",
+        "Training deep networks demands substantial computational hardware and power.",
+        "Models often function as opaque black boxes lacking explainability and are susceptible to adversarial inputs."
+      ],
+      "expected_keywords": ["data", "interpretability", "black box", "computational", "expensive", "training"],
+      "expected_answer": "Key limitations include: need for large amounts of labeled data, high computational cost, lack of interpretability (black-box), and brittleness to adversarial inputs."
+    },
+    {
+      "id": "hard_003",
+      "question": "How do neural networks learn from data?",
+      "difficulty": "hard",
+      "category": "mechanism",
+      "wikipedia_article": "Neural network",
+      "reference_source": "https://en.wikipedia.org/wiki/Neural_network",
+      "key_factual_claims": [
+        "Neural networks learn by adjusting connection weights between neurons.",
+        "Backpropagation computes error gradients of a loss function through all layers.",
+        "Optimization algorithms like gradient descent iteratively update weights to minimize loss."
+      ],
+      "expected_keywords": ["backpropagation", "gradient", "weights", "loss", "optimisation", "descent"],
+      "expected_answer": "Neural networks learn by adjusting connection weights using backpropagation — computing gradients of a loss function and updating weights via gradient descent."
+    },
+    {
+      "id": "hard_004",
+      "question": "What is transfer learning?",
+      "difficulty": "hard",
+      "category": "concept",
+      "wikipedia_article": "Deep learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Deep_learning",
+      "key_factual_claims": [
+        "Transfer learning applies knowledge gained from one task to a related target task.",
+        "Pretrained weights from large base datasets are fine-tuned on new domains.",
+        "It significantly reduces training time and data requirements for target tasks."
+      ],
+      "expected_keywords": ["pretrained", "fine-tune", "knowledge", "reuse", "task", "domain"],
+      "expected_answer": "Transfer learning reuses knowledge from a model trained on one task (e.g. image classification) to improve performance on a different but related task, often with less training data."
+    },
+    {
+      "id": "hard_005",
+      "question": "What is the bias-variance tradeoff?",
+      "difficulty": "hard",
+      "category": "concept",
+      "wikipedia_article": "Supervised learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Supervised_learning",
+      "key_factual_claims": [
+        "Bias error stems from erroneous assumptions leading to underfitting.",
+        "Variance error stems from sensitivity to small fluctuations in training data leading to overfitting.",
+        "Optimal generalization requires finding the model complexity that minimizes the sum of bias and variance."
+      ],
+      "expected_keywords": ["bias", "variance", "error", "underfitting", "overfitting", "complexity", "tradeoff"],
+      "expected_answer": "The bias-variance tradeoff describes how increasing model complexity reduces bias (underfitting) but increases variance (overfitting), and vice versa."
+    },
+    {
+      "id": "synthesis_001",
+      "question": "How do deep learning and traditional machine learning relate to each other?",
+      "difficulty": "synthesis",
+      "category": "synthesis",
+      "wikipedia_article": "Deep learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Deep_learning",
+      "key_factual_claims": [
+        "Deep learning is a subset of machine learning based on multi-layered neural networks.",
+        "Traditional machine learning often requires manual feature engineering.",
+        "Deep learning automates feature extraction directly from raw unstructured data."
+      ],
+      "expected_keywords": ["subset", "feature", "neural", "automatic", "manual", "representation", "layers"],
+      "expected_answer": "Deep learning is a subset of machine learning. Traditional ML relies on hand-crafted features; deep learning automatically learns hierarchical feature representations using multi-layer neural networks."
+    },
+    {
+      "id": "synthesis_002",
+      "question": "How do statistics and machine learning relate to each other?",
+      "difficulty": "synthesis",
+      "category": "synthesis",
+      "wikipedia_article": "Statistics",
+      "reference_source": "https://en.wikipedia.org/wiki/Statistics",
+      "key_factual_claims": [
+        "Both fields focus on learning and making inferences from data.",
+        "Statistics stresses mathematical foundations, confidence intervals, and hypothesis tests.",
+        "Machine learning focuses more on predictive accuracy and scalability to massive datasets."
+      ],
+      "expected_keywords": ["probabilistic", "inference", "model", "foundation", "overlap", "prediction"],
+      "expected_answer": "Both fields deal with learning from data. Statistics emphasises inference and uncertainty quantification; ML focuses on predictive performance. Many ML algorithms have statistical foundations."
+    },
+    {
+      "id": "synthesis_003",
+      "question": "How does unsupervised learning complement supervised learning in AI systems?",
+      "difficulty": "synthesis",
+      "category": "synthesis",
+      "wikipedia_article": "Unsupervised learning",
+      "reference_source": "https://en.wikipedia.org/wiki/Unsupervised_learning",
+      "key_factual_claims": [
+        "Unsupervised learning discovers structure and patterns in unlabeled data.",
+        "It can learn representations (embeddings) that serve as pretraining for supervised models.",
+        "It enables dimensionality reduction and clustering to clean or preprocess data before classification."
+      ],
+      "expected_keywords": ["unlabeled", "features", "representation", "cluster", "pretraining", "structure"],
+      "expected_answer": "Unsupervised learning can discover structure in unlabeled data (clustering, dimensionality reduction) or learn useful representations (pretraining) that enhance downstream supervised tasks."
+    }
+  ]
+}
