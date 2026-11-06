@@ -1,42 +1,42 @@
-# WikiTruth AI — Wikipedia-Grounded Answer Bot
-# P53 College Mini-Project — MIT ADT University, Generative AI Course
-# Install: pip install -r requirements.txt
 
-# ── Core: Wikipedia data collection ─────────────────────────────────────────
+# WikiTruth AI - Wikipedia-Grounded Answer Bot
+# P53 College Mini-Project - MIT ADT University
+
+# Core: Wikipedia data collection
 wikipedia>=1.4.0
 
-# ── Tokenisation (chunking) ──────────────────────────────────────────────────
+# Tokenisation
 tiktoken>=0.5.0
 
-# ── Embeddings: Sentence-BERT (local, no API key needed) ────────────────────
+# Embeddings: Sentence-BERT
 sentence-transformers>=2.3.0
 torch>=2.0.0
 
-# ── Vector database ──────────────────────────────────────────────────────────
+# Vector database
 chromadb>=0.4.0
 
-# ── Local LLM fallback (no API key needed) ───────────────────────────────────
-transformers>=4.35.0
+# Local LLM: Flan-T5 compatibility
+transformers>=4.40.0,<5.0.0
 huggingface-hub>=0.19.0
 accelerate>=0.24.0
 
-# ── LLM providers (optional — higher quality answers) ───────────────────────
-anthropic>=0.20.0     # for Anthropic Claude (set ANTHROPIC_API_KEY)
-openai>=1.12.0           # for OpenAI GPT    (set OPENAI_API_KEY)
+# Optional LLM providers
+anthropic>=0.20.0
+openai>=1.12.0
 
-# ── Image generation ─────────────────────────────────────────────────────────
+# Image generation
 requests>=2.31.0
 Pillow>=9.5.0
 matplotlib>=3.7.0
 
-# ── Streamlit app ────────────────────────────────────────────────────────────
+# Streamlit application
 streamlit>=1.28.0
 plotly>=5.17.0
 
-# ── Utilities ─────────────────────────────────────────────────────────────────
+# Utilities
 numpy>=1.24.0
 tqdm>=4.65.0
 pandas>=2.0.0
 
-# ── Testing ───────────────────────────────────────────────────────────────────
+# Testing
 pytest>=7.4.0
