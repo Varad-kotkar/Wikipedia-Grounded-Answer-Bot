@@ -1,41 +1,19 @@
-
-# WikiTruth AI - P53 College Mini Project
-
-# Wikipedia data collection
-wikipedia==1.4.0
-
-# Tokenisation
-tiktoken==0.7.0
-
-# Embeddings and machine learning
-sentence-transformers==3.4.1
+streamlit
 torch==2.5.1
-
-# Vector database
-chromadb==0.6.3
-
-# Local LLM
-transformers==4.44.2
-huggingface-hub==0.24.7
-accelerate==0.34.2
-
-# Optional LLM providers
-anthropic==0.40.0
-openai==1.58.1
-
-# Image generation and processing
-requests==2.32.3
-Pillow==11.0.0
-matplotlib==3.9.3
-
-# Streamlit application
-streamlit==1.41.1
-plotly==5.24.1
-
-# Utilities
-numpy==1.26.4
-tqdm==4.67.1
-pandas==2.2.3
-
-# Testing
-pytest==8.3.4
+transformers==4.46.3
+sentence-transformers==3.3.1
+chromadb==0.5.23
+wikipedia==1.4.0
+huggingface-hub<1.0
+accelerate
+numpy<2
+pandas
+matplotlib
+plotly
+scikit-learn
+python-dotenv
+requests
+tqdm
+anthropic
+openai
+Pillow
