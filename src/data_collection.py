@@ -1,16 +1,12 @@
-
 """
-WikiTruth AI - Wikipedia data collection.
-
-Fetches article extracts from the official MediaWiki API,
-cleans the text, and saves it to data/raw/.
+Robust Wikipedia article collection with API JSON and HTML fallback.
 """
 
 import logging
 import re
 import time
-from pathlib import Path
 from typing import Optional
+from urllib.parse import quote
 
 import requests
 
@@ -19,22 +15,35 @@ from .config import RAW_DATA_DIR, TOPICS
 logger = logging.getLogger(__name__)
 
 API_URL = "https://en.wikipedia.org/w/api.php"
+REST_URL = "https://en.wikipedia.org/api/rest_v1/page/html/{}"
 
 HEADERS = {
     "User-Agent": (
-        "WikiTruthAI/1.0 "
-        "(educational university project; Wikipedia API client)"
+        "WikiTruthAI/1.0 (educational project; "
+        "https://github.com/Varad-kotkar/Wikipedia-Grounded-Answer-Bot)"
     )
 }
 
-REQUEST_TIMEOUT = 25
-
 
 def clean_text(text: str) -> str:
-    """Remove common Wikipedia formatting artefacts."""
 
     if not text:
         return ""
+
+    try:
+        from bs4 import BeautifulSoup
+
+        if (
+            "<html" in text[:500].lower()
+            or "<!doctype" in text[:500].lower()
+        ):
+            text = BeautifulSoup(
+                text,
+                "html.parser"
+            ).get_text(" ", strip=True)
+
+    except Exception:
+        pass
 
     text = re.sub(r"\[\d+\]", "", text)
     text = re.sub(r"\[edit\]", "", text, flags=re.IGNORECASE)
@@ -42,37 +51,28 @@ def clean_text(text: str) -> str:
         r"\[citation needed\]",
         "",
         text,
-        flags=re.IGNORECASE,
+        flags=re.IGNORECASE
     )
-    text = re.sub(r" {2,}", " ", text)
-    text = re.sub(r"\n[ \t]+", "\n", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"\s+", " ", text)
 
     return text.strip()
 
 
 def title_to_filename(title: str) -> str:
-    """Convert an article title into a safe filename."""
 
-    filename = re.sub(
+    safe = re.sub(
         r"[^a-zA-Z0-9_-]+",
         "_",
-        title.strip().lower(),
+        title.lower()
     ).strip("_")
 
-    return f"{filename}.txt"
+    return safe + ".txt"
 
 
-def _request_article(
+def _fetch_api(
     title: str,
-    session: requests.Session,
-) -> tuple[Optional[str], Optional[str], bool]:
-    """
-    Fetch one article.
-
-    Returns:
-        (resolved_title, extract, is_disambiguation)
-    """
+    session: requests.Session
+) -> tuple[str, str]:
 
     params = {
         "action": "query",
@@ -89,198 +89,225 @@ def _request_article(
         API_URL,
         params=params,
         headers=HEADERS,
-        timeout=REQUEST_TIMEOUT,
+        timeout=20
     )
 
     response.raise_for_status()
 
-    data = response.json()
+    content_type = response.headers.get(
+        "content-type",
+        ""
+    ).lower()
 
-    pages = data.get("query", {}).get("pages", [])
+    if "json" not in content_type:
+        raise ValueError(
+            "Wikipedia API returned non-JSON content."
+        )
 
-    if not pages:
-        return None, None, False
+    payload = response.json()
+
+    pages = payload.get(
+        "query", {}
+    ).get("pages", [])
+
+    if not pages or pages[0].get("missing"):
+        return title, ""
 
     page = pages[0]
 
-    if page.get("missing"):
-        logger.warning("Wikipedia page not found: %s", title)
-        return None, None, False
+    if "disambiguation" in page.get("pageprops", {}):
+        return title, ""
 
-    page_title = page.get("title", title)
-    page_props = page.get("pageprops", {})
+    return (
+        page.get("title", title),
+        clean_text(page.get("extract", ""))
+    )
 
-    is_disambiguation = "disambiguation" in page_props
 
-    extract = clean_text(page.get("extract", ""))
+def _fetch_html(
+    title: str,
+    session: requests.Session
+) -> tuple[str, str]:
 
-    if not extract:
-        logger.warning("Wikipedia returned an empty extract: %s", page_title)
-        return page_title, None, is_disambiguation
+    url = REST_URL.format(
+        quote(
+            title.replace(" ", "_"),
+            safe="_()"
+        )
+    )
 
-    return page_title, extract, is_disambiguation
+    response = session.get(
+        url,
+        headers={
+            **HEADERS,
+            "Accept": "text/html"
+        },
+        timeout=25
+    )
+
+    response.raise_for_status()
+
+    return title, clean_text(response.text)
 
 
 def fetch_article(
     title: str,
     retries: int = 3,
-    retry_delay: float = 3.0,
+    retry_delay: float = 2.0
 ) -> tuple[str, str]:
-    """
-    Fetch an article with retries.
 
-    Returns:
-        (resolved_title, cleaned_content)
+    with requests.Session() as session:
 
-    A failed or ambiguous article returns an empty content string.
-    """
+        for attempt in range(1, retries + 1):
 
-    session = requests.Session()
+            try:
 
-    for attempt in range(1, retries + 1):
-        try:
-            resolved_title, content, is_disambiguation = (
-                _request_article(title, session)
-            )
-
-            if is_disambiguation:
-                logger.warning(
-                    "Skipping ambiguous Wikipedia page: %s",
-                    resolved_title or title,
-                )
-                return title, ""
-
-            if content:
-                logger.info(
-                    "Fetched '%s' - %s characters",
-                    resolved_title,
-                    len(content),
-                )
-                return resolved_title or title, content
-
-            return title, ""
-
-        except (
-            requests.exceptions.Timeout,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-            ValueError,
-        ) as exc:
-            if attempt < retries:
-                wait_time = retry_delay * attempt
-
-                logger.warning(
-                    "Fetch failed for '%s' (attempt %s/%s): %s. "
-                    "Retrying in %s seconds.",
+                resolved, content = _fetch_api(
                     title,
+                    session
+                )
+
+                if len(content) < 300:
+
+                    logger.warning(
+                        "Short API extract for %s; "
+                        "trying HTML endpoint.",
+                        title
+                    )
+
+                    resolved, content = _fetch_html(
+                        title,
+                        session
+                    )
+
+                if len(content) >= 300:
+
+                    logger.info(
+                        "Fetched %s (%d characters)",
+                        resolved,
+                        len(content)
+                    )
+
+                    return resolved, content
+
+                raise ValueError(
+                    "No usable article text returned by Wikipedia."
+                )
+
+            except Exception as exc:
+
+                if attempt >= retries:
+
+                    logger.error(
+                        "Could not collect %s after %d attempts: %s",
+                        title,
+                        retries,
+                        exc
+                    )
+
+                    break
+
+                pause = retry_delay * attempt
+
+                logger.warning(
+                    "Wikipedia request %d/%d for %s failed: %s; "
+                    "retrying in %.1fs",
                     attempt,
                     retries,
-                    exc,
-                    wait_time,
-                )
-
-                time.sleep(wait_time)
-
-            else:
-                logger.error(
-                    "Could not fetch '%s' after %s attempts: %s",
                     title,
-                    retries,
                     exc,
+                    pause
                 )
 
-        except Exception:
-            logger.exception("Unexpected error fetching '%s'.", title)
-            break
+                time.sleep(pause)
 
     return title, ""
 
 
 def collect_all(
     topics: Optional[list[str]] = None,
-    delay: float = 1.5,
-    skip_existing: bool = True,
+    delay: float = 1.0,
+    skip_existing: bool = True
 ) -> None:
-    """
-    Download configured Wikipedia articles into data/raw/.
 
-    Args:
-        topics: Article titles. Defaults to TOPICS from config.py.
-        delay: Delay between article requests.
-        skip_existing: Skip files that already contain usable text.
-    """
+    topics = TOPICS if topics is None else topics
 
-    if topics is None:
-        topics = TOPICS
+    RAW_DATA_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-    RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-    successful = 0
+    downloaded = 0
+    reused = 0
     failed = 0
-    skipped = 0
 
     for topic in topics:
-        filepath = RAW_DATA_DIR / title_to_filename(topic)
 
-        if skip_existing and filepath.exists():
+        path = RAW_DATA_DIR / title_to_filename(topic)
+
+        # Reuse previously collected valid articles.
+        if skip_existing and path.exists():
+
             try:
-                existing_text = filepath.read_text(
+
+                cached = path.read_text(
                     encoding="utf-8"
                 ).strip()
 
-                if len(existing_text) > 100:
+                if len(cached) >= 300:
+
                     logger.info(
-                        "Skipping '%s': existing file is usable.",
-                        topic,
+                        "Reusing saved Wikipedia article: %s",
+                        topic
                     )
-                    skipped += 1
+
+                    reused += 1
                     continue
 
             except OSError:
-                logger.warning(
-                    "Could not read existing file: %s",
-                    filepath,
-                )
 
-        resolved_title, content = fetch_article(topic)
-
-        if content and len(content) > 100:
-            try:
-                filepath.write_text(
-                    content,
-                    encoding="utf-8",
-                )
-
-                logger.info(
-                    "Saved '%s' to %s",
-                    resolved_title,
-                    filepath,
-                )
-                successful += 1
-
-            except OSError:
                 logger.exception(
-                    "Could not save article: %s",
-                    filepath,
+                    "Could not read cached file: %s",
+                    path
                 )
-                failed += 1
+
+        title, content = fetch_article(topic)
+
+        if len(content) >= 300:
+
+            path.write_text(
+                content,
+                encoding="utf-8"
+            )
+
+            logger.info(
+                "Saved %s (%d characters)",
+                title,
+                len(content)
+            )
+
+            downloaded += 1
 
         else:
-            logger.warning(
-                "No usable content collected for '%s'.",
-                topic,
-            )
+
             failed += 1
+
+            logger.error(
+                "No usable article was saved for %s",
+                topic
+            )
 
         time.sleep(max(0.0, delay))
 
-    total_files = len(list(RAW_DATA_DIR.glob("*.txt")))
+    total_files = len(
+        list(RAW_DATA_DIR.glob("*.txt"))
+    )
 
     logger.info(
-        "Collection finished. Successful: %s | Failed: %s | "
-        "Skipped: %s | Files on disk: %s",
-        successful,
+        "Collection complete: downloaded=%d reused=%d "
+        "failed=%d raw_files=%d",
+        downloaded,
+        reused,
         failed,
-        skipped,
-        total_files,
+        total_files
     )
