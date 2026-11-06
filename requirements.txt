@@ -9,16 +9,17 @@ wikipedia>=1.4.0
 tiktoken>=0.5.0
 
 # Embeddings: Sentence-BERT
-sentence-transformers>=2.3.0
-torch>=2.0.0
+
 
 # Vector database
 chromadb>=0.4.0
 
 # Local LLM: Flan-T5 compatibility
-transformers>=4.40.0,<5.0.0
-huggingface-hub>=0.19.0
-accelerate>=0.24.0
+sentence-transformers==3.4.1
+transformers==4.44.2
+torch==2.5.1
+huggingface-hub==0.24.7
+accelerate==0.34.2
 
 # Optional LLM providers
 anthropic>=0.20.0
