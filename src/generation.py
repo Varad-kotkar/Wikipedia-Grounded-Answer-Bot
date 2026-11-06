@@ -23,7 +23,12 @@ from .config import (
     ANTHROPIC_API_KEY,
     OPENAI_API_KEY,
 )
-from .grounding import build_prompt, detect_grounding_status, GroundingStatus
+
+from .grounding import (
+    build_prompt,
+    detect_grounding_status,
+    GroundingStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +39,6 @@ Question: {question}
 
 Answer:"""
 
-# Flan-T5 models commonly have a 512-token encoder input limit.
-# Keep this conservative and preserve the question before adding evidence.
 LOCAL_INPUT_TOKEN_LIMIT = 512
 
 
@@ -48,31 +51,42 @@ class Generator:
         self._local_pipeline = None
         self._setup()
 
+    # ---------------------------------------------------------
+    # Provider setup
+    # ---------------------------------------------------------
+
     def _setup(self) -> None:
+
         if self.provider == "anthropic":
+
             if not ANTHROPIC_API_KEY:
+
                 if OPENAI_API_KEY:
                     logger.warning(
                         "ANTHROPIC_API_KEY not set; falling back to OpenAI."
                     )
                     self.provider = "openai"
                     self._setup_openai()
+
                 else:
                     logger.warning(
                         "No API keys found; falling back to local Flan-T5."
                     )
                     self.provider = "local"
                     self._setup_local()
+
             else:
                 self._setup_anthropic()
 
         elif self.provider == "openai":
+
             if not OPENAI_API_KEY:
                 logger.warning(
                     "OPENAI_API_KEY not set; falling back to local Flan-T5."
                 )
                 self.provider = "local"
                 self._setup_local()
+
             else:
                 self._setup_openai()
 
@@ -88,12 +102,14 @@ class Generator:
             self._setup_local()
 
     def _setup_anthropic(self) -> None:
+
         try:
             import anthropic
 
             self._client = anthropic.Anthropic(
                 api_key=ANTHROPIC_API_KEY
             )
+
             logger.info(
                 "Generator: Anthropic Claude (%s)",
                 ANTHROPIC_MODEL,
@@ -101,16 +117,20 @@ class Generator:
 
         except ImportError:
             logger.exception(
-                "anthropic package unavailable; falling back to local Flan-T5."
+                "Anthropic package unavailable. Falling back to local Flan-T5."
             )
             self.provider = "local"
             self._setup_local()
 
     def _setup_openai(self) -> None:
+
         try:
             from openai import OpenAI
 
-            self._client = OpenAI(api_key=OPENAI_API_KEY)
+            self._client = OpenAI(
+                api_key=OPENAI_API_KEY
+            )
+
             logger.info(
                 "Generator: OpenAI (%s)",
                 OPENAI_CHAT_MODEL,
@@ -118,58 +138,91 @@ class Generator:
 
         except ImportError:
             logger.exception(
-                "openai package unavailable; falling back to local Flan-T5."
+                "OpenAI package unavailable. Falling back to local Flan-T5."
             )
             self.provider = "local"
             self._setup_local()
 
     def _setup_local(self) -> None:
         """Defer loading Flan-T5 until the first generation request."""
+
         self.provider = "local"
+
         logger.info(
             "Generator: Local Flan-T5 (%s)",
             LOCAL_LLM_MODEL,
         )
 
+    # ---------------------------------------------------------
+    # Local Flan-T5 model loading
+    # ---------------------------------------------------------
+
     def _get_local_pipeline(self):
-        """Load the Flan-T5 text2text-generation pipeline once."""
+        """
+        Load Flan-T5 explicitly on CPU.
+
+        Disabling low_cpu_mem_usage avoids the meta-device
+        initialization path associated with the reported error.
+        """
+
         if self._local_pipeline is None:
+
             try:
-                from transformers import pipeline as hf_pipeline
+                from transformers import (
+                    AutoModelForSeq2SeqLM,
+                    AutoTokenizer,
+                    pipeline as hf_pipeline,
+                )
 
             except ImportError as exc:
                 raise ImportError(
-                    "transformers is not installed. "
-                    "Install requirements.txt."
+                    "Required Transformers packages are missing. "
+                    "Check requirements.txt."
                 ) from exc
 
             logger.info(
-                "Loading local Flan-T5 model: %s",
+                "Loading Flan-T5 model: %s",
                 LOCAL_LLM_MODEL,
             )
 
-            # Flan-T5 is an encoder-decoder model.
-            # text2text-generation is the correct pipeline
-            # when using Transformers 4.x.
+            # Load tokenizer
+            tokenizer = AutoTokenizer.from_pretrained(
+                LOCAL_LLM_MODEL
+            )
+
+            # Load model without low-memory meta initialization
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                LOCAL_LLM_MODEL,
+                low_cpu_mem_usage=False,
+                device_map=None,
+            )
+
+            # Use CPU for Streamlit Cloud
+            model = model.to("cpu")
+
+            # Create text generation pipeline
             self._local_pipeline = hf_pipeline(
                 "text2text-generation",
-                model=LOCAL_LLM_MODEL,
+                model=model,
+                tokenizer=tokenizer,
+                device=-1,
             )
 
             logger.info(
-                "Local Flan-T5 model loaded successfully."
+                "Flan-T5 loaded successfully on CPU."
             )
 
         return self._local_pipeline
 
-    def _prepare_local_input(self, prompt: str) -> str:
-        """
-        Token-truncate local inputs safely.
+    # ---------------------------------------------------------
+    # Input preparation
+    # ---------------------------------------------------------
 
-        The question is deliberately placed first in grounded prompts
-        so truncation cannot discard it after long retrieved passages.
-        """
+    def _prepare_local_input(self, prompt: str) -> str:
+        """Token-truncate local inputs while retaining the question."""
+
         pipe = self._get_local_pipeline()
+
         tokenizer = pipe.tokenizer
 
         encoded = tokenizer(
@@ -179,12 +232,14 @@ class Generator:
             return_tensors=None,
         )
 
-        input_ids = encoded["input_ids"]
-
         return tokenizer.decode(
-            input_ids,
+            encoded["input_ids"],
             skip_special_tokens=True,
         )
+
+    # ---------------------------------------------------------
+    # Grounded prompt construction
+    # ---------------------------------------------------------
 
     @staticmethod
     def _build_local_grounded_prompt(
@@ -192,14 +247,10 @@ class Generator:
         chunks: List[Dict],
         prompt_style: str,
     ) -> str:
-        """
-        Build a compact Flan-T5 prompt with the question first.
-
-        This avoids sending the very long hosted-model prompt,
-        including lengthy few-shot examples, to the local model.
-        """
+        """Build a compact Flan-T5 prompt with the question first."""
 
         if prompt_style == "few_shot":
+
             instruction = (
                 "Answer only from the evidence. "
                 "If the evidence does not answer the question, "
@@ -208,6 +259,7 @@ class Generator:
             )
 
         else:
+
             instruction = (
                 "Use only the Wikipedia evidence below. "
                 "Answer the question directly in clear sentences "
@@ -217,7 +269,7 @@ class Generator:
                 "say that the sources do not contain enough information."
             )
 
-        # Question first: truncation from the right preserves it.
+        # Question first so truncation does not remove it.
         parts = [
             instruction,
             f"Question: {question}",
@@ -225,6 +277,7 @@ class Generator:
         ]
 
         for index, chunk in enumerate(chunks, start=1):
+
             source = str(
                 chunk.get("source", "Wikipedia")
             )
@@ -242,10 +295,15 @@ class Generator:
 
         return "\n".join(parts)
 
+    # ---------------------------------------------------------
+    # LLM calls
+    # ---------------------------------------------------------
+
     def _call_llm(self, prompt: str) -> str:
-        """Send a prompt to the selected provider and return generated text."""
+        """Send a prompt to the selected provider."""
 
         if self.provider == "anthropic":
+
             response = self._client.messages.create(
                 model=ANTHROPIC_MODEL,
                 max_tokens=MAX_TOKENS,
@@ -261,6 +319,7 @@ class Generator:
             return response.content[0].text.strip()
 
         if self.provider == "openai":
+
             response = self._client.chat.completions.create(
                 model=OPENAI_CHAT_MODEL,
                 messages=[
@@ -273,14 +332,17 @@ class Generator:
                 max_tokens=MAX_TOKENS,
             )
 
-            content = response.choices[0].message.content
-
-            return (content or "").strip()
+            return (
+                response.choices[0].message.content or ""
+            ).strip()
 
         if self.provider == "local":
+
             pipe = self._get_local_pipeline()
 
-            safe_prompt = self._prepare_local_input(prompt)
+            safe_prompt = self._prepare_local_input(
+                prompt
+            )
 
             outputs = pipe(
                 safe_prompt,
@@ -301,6 +363,10 @@ class Generator:
             f"Unknown provider: {self.provider}"
         )
 
+    # ---------------------------------------------------------
+    # Grounded answer generation
+    # ---------------------------------------------------------
+
     def generate(
         self,
         question: str,
@@ -310,12 +376,12 @@ class Generator:
         """Generate an answer grounded in retrieved Wikipedia passages."""
 
         if not chunks:
+
             return {
                 "question": question,
                 "answer": (
-                    "I cannot answer this question based on the "
-                    "available Wikipedia sources. "
-                    "No relevant passages were retrieved."
+                    "I cannot answer this question based on the available "
+                    "Wikipedia sources. No relevant passages were retrieved."
                 ),
                 "context_chunks": [],
                 "provider": self.provider,
@@ -324,8 +390,9 @@ class Generator:
                 "prompt_style": prompt_style,
             }
 
+        # Build provider-specific prompt
         if self.provider == "local":
-            # Use a compact question-first prompt for Flan-T5.
+
             full_prompt = self._build_local_grounded_prompt(
                 question,
                 chunks,
@@ -333,14 +400,17 @@ class Generator:
             )
 
         else:
-            # Hosted models use the original grounding prompt.
+
             _, full_prompt = build_prompt(
                 question,
                 chunks,
                 style=prompt_style,
             )
 
+        generation_failed = False
+
         try:
+
             answer = self._call_llm(
                 full_prompt
             ).strip()
@@ -351,16 +421,26 @@ class Generator:
                 )
 
         except Exception as exc:
+
             logger.exception(
                 "Grounded LLM generation failed."
             )
 
             answer = f"[Generation error: {exc}]"
 
-        status = detect_grounding_status(
-            answer,
-            chunks,
-        )
+            generation_failed = True
+
+        # Do not label a technical error as a grounded answer.
+        if generation_failed:
+
+            status = GroundingStatus.UNSUPPORTED
+
+        else:
+
+            status = detect_grounding_status(
+                answer,
+                chunks,
+            )
 
         return {
             "question": question,
@@ -372,17 +452,22 @@ class Generator:
             "prompt_style": prompt_style,
         }
 
+    # ---------------------------------------------------------
+    # Ungrounded answer generation
+    # ---------------------------------------------------------
+
     def generate_ungrounded(
         self,
         question: str,
     ) -> dict:
-        """Generate without retrieval for grounded-vs-ungrounded comparison."""
+        """Generate without retrieval for comparison."""
 
         prompt = _UNGROUNDED_PROMPT.format(
             question=question
         )
 
         try:
+
             answer = self._call_llm(
                 prompt
             ).strip()
@@ -393,6 +478,7 @@ class Generator:
                 )
 
         except Exception as exc:
+
             logger.exception(
                 "Ungrounded LLM generation failed."
             )
@@ -409,6 +495,10 @@ class Generator:
             "prompt_style": "none",
         }
 
+    # ---------------------------------------------------------
+    # Model information
+    # ---------------------------------------------------------
+
     def _get_model_name(self) -> str:
         """Return the configured model identifier."""
 
@@ -424,9 +514,9 @@ class Generator:
         return "unknown"
 
 
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------
 # Module-level singleton
-# ---------------------------------------------------------------------------
+# ---------------------------------------------------------
 
 _generator: Optional[Generator] = None
 
@@ -443,7 +533,8 @@ def get_generator() -> Generator:
 
 
 def reset_generator() -> None:
-    """Reset the generator singleton (useful for testing)."""
+    """Reset the generator singleton."""
 
     global _generator
+
     _generator = None
